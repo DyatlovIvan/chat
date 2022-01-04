@@ -1,26 +1,28 @@
-import React, {ChangeEvent, useEffect, useState} from 'react';
-import logo from './logo.svg';
+import React, {ChangeEvent, LegacyRef, RefObject, useEffect, useRef, useState} from 'react';
 import './App.css';
 
 type UsersType = {
     userId: number
     userName: string
     message: string
-    photo:string
+    photo: string
 }
 
 function App() {
+    const messagesBlockRef = useRef()
     const [message, setMessage] = useState('')
     const [users, setUsers] = useState<Array<UsersType>>([])
     const [webSocked, setWebSocked] = useState<null | WebSocket>(null)
 
-    useEffect(() => {
-        const ws = new WebSocket('wss://social-network.samuraijs.com/handlers/ChatHandler.ashx')
-        ws.onmessage = (messageEvent) => {
+    if (webSocked) {
+        webSocked.onmessage = (messageEvent) => {
             setUsers([...users, ...JSON.parse(messageEvent.data)])
         }
-        setWebSocked(ws);
+    }
 
+    useEffect(() => {
+        const ws = new WebSocket('wss://social-network.samuraijs.com/handlers/ChatHandler.ashx')
+        setWebSocked(ws);
     }, [])
     const onMessageChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
         setMessage(e.currentTarget.value)
@@ -28,6 +30,7 @@ function App() {
     const sendMessage = () => {
         if (webSocked) {
             webSocked.send(message)
+            setMessage('')
         }
 
     }
@@ -47,7 +50,7 @@ function App() {
                 </div>
 
                 <div className={'footer'}>
-                    <textarea value={message} onChange={onMessageChange}></textarea>
+                    <textarea value={message} onChange={onMessageChange}/>
                     <button onClick={sendMessage}>Send</button>
                 </div>
             </div>
